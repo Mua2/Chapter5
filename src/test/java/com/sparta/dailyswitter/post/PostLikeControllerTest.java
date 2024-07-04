@@ -15,6 +15,9 @@ import org.springframework.http.ResponseEntity;
 
 import com.sparta.dailyswitter.domain.like.postlike.controller.PostLikeController;
 import com.sparta.dailyswitter.domain.like.postlike.service.PostLikeService;
+import com.sparta.dailyswitter.domain.post.controller.PostController;
+import com.sparta.dailyswitter.domain.post.dto.PostResponseDto;
+import com.sparta.dailyswitter.domain.post.service.PostService;
 import com.sparta.dailyswitter.domain.user.entity.User;
 import com.sparta.dailyswitter.security.UserDetailsImpl;
 
@@ -24,6 +27,12 @@ public class PostLikeControllerTest {
 
 	@Mock
 	private PostLikeService postLikeService;
+
+	@Mock
+	private PostService postService;
+
+	@InjectMocks
+	private PostController postController;
 
 	@InjectMocks
 	private PostLikeController postLikeController;
@@ -67,6 +76,34 @@ public class PostLikeControllerTest {
 		logger.info("좋아요 삭제에 성공했습니다.");
 
 		verify(postLikeService, times(1)).deletePostLike(anyLong(), any(User.class));
+	}
 
+	@Test
+	void getPostLikeTest() {
+		Long postId = 1L;
+		PostResponseDto postResponseDto = PostResponseDto.builder()
+			.title("Test Title")
+			.contents("Test Contents")
+			.userId("testuser")
+			.postLikes(5L)
+			.isPinned(false)
+			.createdAt(null)
+			.updatedAt(null)
+			.build();
+		when(postService.getPost(postId)).thenReturn(postResponseDto);
+
+		ResponseEntity<?> response = postController.getPost(postId);
+
+		assertNotNull(response, "응답이 Null 입니다.");
+		assertEquals(HttpStatus.OK, response.getStatusCode(), "응답 상태가 200OK가 아닙니다.");
+		assertNotNull(response.getBody(), "응답 본문이 Null입니다.");
+
+		PostResponseDto responseDto = (PostResponseDto) response.getBody();
+		assertEquals(5L, responseDto.getPostLikes(), "좋아요 개수가 일치하지 않습니다.");
+		assertEquals("Test Title", responseDto.getTitle(), "제목이 일치하지 않습니다.");
+		assertEquals("Test Contents", responseDto.getContents(), "내용이 일치하지 않습니다.");
+		assertEquals("testuser", responseDto.getUserId(), "사용자 ID 가 일치하지 않습니다.");
+
+		logger.info("게시물 조회 테스트 성공 - 좋아요 개수: {}", responseDto.getPostLikes());
 	}
 }
