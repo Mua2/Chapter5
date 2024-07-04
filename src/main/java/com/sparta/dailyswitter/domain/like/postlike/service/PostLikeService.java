@@ -25,6 +25,10 @@ public class PostLikeService {
 	public void createPostLike(Long postId, User user) {
 		Post post = postService.findById(postId);
 
+		if (post.getUser().getId().equals(user.getId())) {
+			throw new CustomException(ErrorCode.POST_SAME_USER);
+		}
+
 		PostLikeId postLikeId = PostLikeId.builder()
 			.user(user)
 			.post(post)
